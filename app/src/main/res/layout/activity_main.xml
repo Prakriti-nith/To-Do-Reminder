@@ -23,7 +23,7 @@
             android:layout_height="wrap_content"
             android:layout_alignParentLeft="true"
             android:layout_toLeftOf="@id/imageButtonAdd"
-            android:hint=" Reminder about?"
+            android:hint=" Enter your to do work"
             android:layout_alignBottom="@id/imageButtonAdd"/>
     </RelativeLayout>
 
