@@ -3,7 +3,7 @@
     android:layout_height="wrap_content"
     android:text="Dummy"
     android:textSize="24sp"
-    android:textColor="#000"
+    android:textColor="#FFF"
     android:padding="10dp"
-    android:background="#fafafa"
+    android:background="#024d6c"
     xmlns:android="http://schemas.android.com/apk/res/android" />

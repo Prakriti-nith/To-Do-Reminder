@@ -57,7 +57,6 @@ public class MainActivity extends AppCompatActivity {
         arrayListRem = new ArrayList<>();
         arrayAdapter = new ArrayAdapter(this, R.layout.list_view, arrayListRem);
         listView.setAdapter(arrayAdapter);
-
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int position, long l) {
@@ -69,8 +68,16 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 remind = editTextAbout.getText().toString();
+                String textTime=buttonTime.getText().toString();
+                String textDate=buttonDate.getText().toString();
                 if(remind.equals("")) {
                     Toast.makeText(MainActivity.this, "Add Reminder Name", Toast.LENGTH_SHORT).show();
+                }
+                else if(textDate.equals("Select Date")) {
+                        Toast.makeText(MainActivity.this, "Add Date", Toast.LENGTH_SHORT).show();
+                }
+                else if(textTime.equals("Select Time")) {
+                    Toast.makeText(MainActivity.this, "Add Time", Toast.LENGTH_SHORT).show();
                 }
                 else {
                     value = remind + "\n" + dates + "\n" + time;

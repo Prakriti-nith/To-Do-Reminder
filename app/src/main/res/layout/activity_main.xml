@@ -1,21 +1,23 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:padding="8dp">
-
+    android:padding="8dp"
+    android:background="@drawable/back12">
     <RelativeLayout
+        android:id="@+id/Relative1"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true">
 
         <ImageButton
             android:id="@+id/imageButtonAdd"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_alignParentRight="true"
-            android:src="@drawable/add1"
-            android:background="#fafafa"/>
+            android:src="@drawable/ic_add_circle_outline_black_24dp"
+            android:background="#08314a"
+            android:layout_marginTop="12dp"/>
 
         <EditText
             android:id="@+id/editTextAbout"
@@ -24,13 +26,16 @@
             android:layout_alignParentLeft="true"
             android:layout_toLeftOf="@id/imageButtonAdd"
             android:hint=" Enter your to do work"
+            android:textColor="#FFF"
+            android:textColorHint="#FFF"
             android:layout_alignBottom="@id/imageButtonAdd"/>
     </RelativeLayout>
-
     <LinearLayout
+        android:id="@+id/Linear1"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:weightSum="2">
+        android:weightSum="2"
+        android:layout_above="@id/Relative1">
 
         <Button
             android:id="@+id/buttonDate"
@@ -38,7 +43,10 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="Select Date"
-            android:textAllCaps="false" />
+            android:textAllCaps="false"
+            android:background="@drawable/button_back"
+            android:textColor="#FFF"
+            android:layout_margin="10dp"/>
 
         <Button
             android:id="@+id/buttonTime"
@@ -46,11 +54,15 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="Select Time"
-            android:textAllCaps="false" />
+            android:textAllCaps="false"
+            android:background="@drawable/button_back"
+            android:textColor="#FFF"
+            android:layout_margin="10dp"/>
     </LinearLayout>
     <ListView
         android:id="@+id/listView"
+        android:layout_above="@id/Linear1"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"></ListView>
-
-</LinearLayout>
+        android:layout_height="match_parent">
+    </ListView>
+    </RelativeLayout>
