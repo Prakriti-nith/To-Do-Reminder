@@ -1,12 +1,15 @@
-package gupta.p.todo;
+package gupta.p.todo.main;
 
 import android.app.DatePickerDialog;
 import android.app.TimePickerDialog;
+import android.content.ContentValues;
 import android.content.DialogInterface;
+import android.content.Intent;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -21,75 +24,142 @@ import android.widget.Toast;
 import java.util.ArrayList;
 import java.util.Calendar;
 
+import gupta.p.todo.R;
+import gupta.p.todo.helper.MySqliteOpenHelper;
+import gupta.p.todo.table.ToDo_tbl;
+
 public class MainActivity extends AppCompatActivity {
 
     Button buttonDate, buttonTime;
     EditText editTextAbout;
     ImageButton imageButtonAdd;
     ListView listView;
-    String value,time,dates,remind;
+    String timeET,dateET,todoET;
     ArrayAdapter arrayAdapter;
-    ArrayList<String> arrayListRem;
+    ArrayList<String> arrayListRem= new ArrayList<>();
+    ArrayList<Integer> idArrayList= new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        listView = (ListView) findViewById(R.id.listView);
-        imageButtonAdd = (ImageButton) findViewById(R.id.imageButtonAdd);
-        editTextAbout = (EditText) findViewById(R.id.editTextAbout);
-        buttonDate = (Button) findViewById(R.id.buttonDate);
-        buttonDate.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                showCalendar();
-            }
-        });
-        buttonTime = (Button) findViewById(R.id.buttonTime);
-        buttonTime.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                showClocK();
-            }
-        });
+        init();
 
-        arrayListRem = new ArrayList<>();
-        arrayAdapter = new ArrayAdapter(this, R.layout.list_view, arrayListRem);
-        listView.setAdapter(arrayAdapter);
+        setListeners();
+
+        fetchDatabaseToArrayList();
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int position, long l) {
                 showListDialog(position);
             }
         });
+    }
 
+
+    private void init() {
+        listView = (ListView) findViewById(R.id.listView);
+        imageButtonAdd = (ImageButton) findViewById(R.id.imageButtonAdd);
+        editTextAbout = (EditText) findViewById(R.id.editTextAbout);
+        buttonDate = (Button) findViewById(R.id.buttonDate);
+        buttonTime = (Button) findViewById(R.id.buttonTime);
+    }
+
+
+    private void setListeners() {
+        buttonDate.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                showCalendar();
+            }
+        });
+        buttonTime.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                showClocK();
+            }
+        });
         imageButtonAdd.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                remind = editTextAbout.getText().toString();
+                todoET = editTextAbout.getText().toString();
                 String textTime=buttonTime.getText().toString();
                 String textDate=buttonDate.getText().toString();
-                if(remind.equals("")) {
+                if(todoET.equals("")) {
                     Toast.makeText(MainActivity.this, "Add Reminder Name", Toast.LENGTH_SHORT).show();
                 }
                 else if(textDate.equals("Select Date")) {
-                        Toast.makeText(MainActivity.this, "Add Date", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(MainActivity.this, "Add Date", Toast.LENGTH_SHORT).show();
                 }
                 else if(textTime.equals("Select Time")) {
                     Toast.makeText(MainActivity.this, "Add Time", Toast.LENGTH_SHORT).show();
                 }
                 else {
-                    value = remind + "\n" + dates + "\n" + time;
-                    arrayListRem.add(value);
-                    arrayAdapter.notifyDataSetChanged();
-                    editTextAbout.setText("");
-                    buttonTime.setText("Select Time");
-                    buttonDate.setText("Select Date");
+                    insertDatabase();
+                    arrayListRem.clear();
+                    idArrayList.clear();
+                    fetchDatabaseToArrayList();
                 }
             }
         });
     }
+
+    private void insertDatabase() {
+        //value = todoET + "\n" + dateET + "\n" + timeET;
+
+        MySqliteOpenHelper helper = new MySqliteOpenHelper(MainActivity.this);
+        SQLiteDatabase db = helper.getWritableDatabase();
+
+        ContentValues cv = new ContentValues();
+        cv.put(ToDo_tbl.TODO, todoET);
+        cv.put(ToDo_tbl.DATE, dateET);
+        cv.put(ToDo_tbl.TIME, timeET);
+
+        long l = ToDo_tbl.insert(db, cv);
+        if (l>0) {
+            Toast.makeText(MainActivity.this, "Reminder Set", Toast.LENGTH_SHORT).show();
+        }
+        else {
+            Toast.makeText(MainActivity.this, "Try Again", Toast.LENGTH_SHORT).show();
+        }
+        db.close();
+
+        editTextAbout.setText("");
+        buttonTime.setText("Select Time");
+        buttonDate.setText("Select Date");
+    }
+
+
+    private void fetchDatabaseToArrayList() {
+        MySqliteOpenHelper mySqliteOpenHelper = new MySqliteOpenHelper(this);
+        SQLiteDatabase db = mySqliteOpenHelper.getReadableDatabase();
+
+        Cursor cursor = ToDo_tbl.select(db, null);
+        if (cursor != null)
+        {
+            while (cursor.moveToNext())
+            {
+                int id = cursor.getInt(0);
+                String todo = cursor.getString(1);
+                String date = cursor.getString(2);
+                String time = cursor.getString(3);
+
+                arrayListRem.add(""+todo
+                        +"\nDate: "+date+"\nTime: "+time);
+
+                idArrayList.add(id);
+            }
+            cursor.close();
+            db.close();
+
+            arrayAdapter = new ArrayAdapter(MainActivity.this, R.layout.list_view, arrayListRem);
+            listView.setAdapter(arrayAdapter);
+        }
+
+    }
+
+
     private void showCalendar() {
         Calendar calendar= Calendar.getInstance();
         final int date=calendar.get(Calendar.DAY_OF_MONTH);
@@ -98,8 +168,9 @@ public class MainActivity extends AppCompatActivity {
         DatePickerDialog datePickerDialog=new DatePickerDialog(MainActivity.this, new DatePickerDialog.OnDateSetListener() {
             @Override
             public void onDateSet(DatePicker view, int year, int month, int dayOfMonth) {
+                month=month+1;
                 buttonDate.setText(""+dayOfMonth+"-"+month+"-"+year);
-                dates="Date: "+dayOfMonth+"-"+month+"-"+year;
+                dateET=""+dayOfMonth+"-"+month+"-"+year;
             }
         },year,month,date);
         datePickerDialog.show();
@@ -112,7 +183,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onTimeSet(TimePicker view, int hourOfDay, int minute) {
                 buttonTime.setText(""+hourOfDay+":"+minute);
-                time="Time: "+hourOfDay+":"+minute;
+                timeET=""+hourOfDay+":"+minute;
             }
         },hour,minute,true);
         timePickerDialog.show();
@@ -130,6 +201,12 @@ public class MainActivity extends AppCompatActivity {
                 if(position==0) {
                     showDelDialog(pos);
                 }
+                else {
+                    int id = idArrayList.get(pos);
+                    Intent i=new Intent(MainActivity.this,Edit.class);
+                    i.putExtra("ID",id);
+                    startActivity(i);
+                }
             }
         });
         AlertDialog dialog = builder.create();
@@ -143,8 +220,22 @@ public class MainActivity extends AppCompatActivity {
         builder.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
-                arrayListRem.remove(position);
-                arrayAdapter.notifyDataSetChanged();
+                MySqliteOpenHelper helper=new MySqliteOpenHelper(MainActivity.this);
+                SQLiteDatabase db=helper.getWritableDatabase();
+                int id = idArrayList.get(position);
+                String whereCluase = ToDo_tbl.ID +" = '"+id+"'";
+
+                int flag = ToDo_tbl.delete(db, whereCluase);
+                if (flag > 0) {
+                    Toast.makeText(MainActivity.this, "Deleted", Toast.LENGTH_SHORT).show();
+                    arrayListRem.clear();
+                    idArrayList.clear();
+                    fetchDatabaseToArrayList();
+                    arrayAdapter.notifyDataSetChanged();
+                }
+                else {
+                    Toast.makeText(MainActivity.this, "can't delete", Toast.LENGTH_SHORT).show();
+                }
             }
         });
         builder.setNeutralButton("No", new DialogInterface.OnClickListener() {

@@ -10,7 +10,7 @@
         android:layout_height="wrap_content">
 
         <ImageButton
-            android:id="@+id/imageButtonAdd"
+            android:id="@+id/imageButtonAddU"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_alignParentRight="true"
@@ -19,25 +19,26 @@
             android:layout_marginTop="12dp"/>
 
         <EditText
-            android:id="@+id/editTextAbout"
+            android:id="@+id/editTextAboutU"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_alignParentLeft="true"
-            android:layout_toLeftOf="@id/imageButtonAdd"
+            android:layout_toLeftOf="@id/imageButtonAddU"
             android:hint=" Enter your to do work"
             android:textColor="#FFF"
             android:textColorHint="#FFF"
-            android:layout_alignBottom="@id/imageButtonAdd"/>
+            android:layout_alignBottom="@id/imageButtonAddU"/>
     </RelativeLayout>
     <LinearLayout
         android:id="@+id/Linear1"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:weightSum="2"
-        android:layout_below="@id/Relative1">
+        android:layout_below="@id/Relative1"
+        android:layout_marginBottom="250dp">
 
         <Button
-            android:id="@+id/buttonDate"
+            android:id="@+id/buttonDateU"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
@@ -48,7 +49,7 @@
             android:layout_margin="10dp"/>
 
         <Button
-            android:id="@+id/buttonTime"
+            android:id="@+id/buttonTimeU"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
@@ -58,10 +59,4 @@
             android:textColor="#FFF"
             android:layout_margin="10dp"/>
     </LinearLayout>
-    <ListView
-        android:id="@+id/listView"
-        android:layout_below="@id/Linear1"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent">
-    </ListView>
-    </RelativeLayout>
+</RelativeLayout>
