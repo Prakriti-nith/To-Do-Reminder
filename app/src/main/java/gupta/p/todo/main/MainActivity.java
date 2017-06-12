@@ -24,7 +24,9 @@ import android.widget.Toast;
 import java.util.ArrayList;
 import java.util.Calendar;
 
+import gupta.p.todo.Pojo.ToDoPojo;
 import gupta.p.todo.R;
+import gupta.p.todo.adapter.MyArrayAdapter;
 import gupta.p.todo.helper.MySqliteOpenHelper;
 import gupta.p.todo.table.ToDo_tbl;
 
@@ -35,8 +37,8 @@ public class MainActivity extends AppCompatActivity {
     ImageButton imageButtonAdd;
     ListView listView;
     String timeET,dateET,todoET;
-    ArrayAdapter arrayAdapter;
-    ArrayList<String> arrayListRem= new ArrayList<>();
+    MyArrayAdapter arrayAdapter;
+    ArrayList<ToDoPojo> arrayListRem= new ArrayList<>();
     ArrayList<Integer> idArrayList= new ArrayList<>();
 
     @Override
@@ -135,6 +137,7 @@ public class MainActivity extends AppCompatActivity {
         MySqliteOpenHelper mySqliteOpenHelper = new MySqliteOpenHelper(this);
         SQLiteDatabase db = mySqliteOpenHelper.getReadableDatabase();
 
+        int k=0;
         Cursor cursor = ToDo_tbl.select(db, null);
         if (cursor != null)
         {
@@ -144,16 +147,29 @@ public class MainActivity extends AppCompatActivity {
                 String todo = cursor.getString(1);
                 String date = cursor.getString(2);
                 String time = cursor.getString(3);
+                char alpha=todo.charAt(0);
+                char alphaU=Character.toUpperCase(alpha);
 
-                arrayListRem.add(""+todo
-                        +"\nDate: "+date+"\nTime: "+time);
-
+                ToDoPojo todopojo=new ToDoPojo();
+                todopojo.setName(todo);
+                todopojo.setDate(date);
+                todopojo.setTime(time);
+                todopojo.setAlpha(""+alphaU);
+                if(k%2==0) {
+                    todopojo.setImageRes(R.drawable.redback);
+                    k++;
+                }
+                else {
+                    todopojo.setImageRes(R.drawable.redback2);
+                    k++;
+                }
+                arrayListRem.add(todopojo);
                 idArrayList.add(id);
             }
             cursor.close();
             db.close();
 
-            arrayAdapter = new ArrayAdapter(MainActivity.this, R.layout.list_view, arrayListRem);
+            arrayAdapter = new MyArrayAdapter(MainActivity.this, R.layout.listview_back, arrayListRem);
             listView.setAdapter(arrayAdapter);
         }
 
