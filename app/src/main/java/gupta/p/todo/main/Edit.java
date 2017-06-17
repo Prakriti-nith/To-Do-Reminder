@@ -34,6 +34,7 @@ public class Edit extends AppCompatActivity {
     EditText editTextAbout;
     ImageButton imageButtonAdd;
     String timeET,dateET,todoET;
+    static long idUpdate;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -125,9 +126,8 @@ public class Edit extends AppCompatActivity {
         int l = ToDo_tbl.update(db, whereClause,cv);
         if (l>0) {
             Toast.makeText(Edit.this, "Updated", Toast.LENGTH_SHORT).show();
-            Intent intent=new Intent(Edit.this,MainActivity.class);
-            startActivity(intent);
-            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK|Intent.FLAG_ACTIVITY_CLEAR_TASK);
+            idUpdate=id;
+            finish();
         }
         else {
             Toast.makeText(Edit.this, "Try Again", Toast.LENGTH_SHORT).show();

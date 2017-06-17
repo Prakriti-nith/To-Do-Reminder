@@ -1,6 +1,9 @@
 package gupta.p.todo.main;
 
+import android.app.Activity;
+import android.app.AlarmManager;
 import android.app.DatePickerDialog;
+import android.app.PendingIntent;
 import android.app.TimePickerDialog;
 import android.content.ContentValues;
 import android.content.DialogInterface;
@@ -10,7 +13,9 @@ import android.database.sqlite.SQLiteDatabase;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
+import android.view.WindowManager;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
@@ -18,6 +23,7 @@ import android.widget.DatePicker;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ListView;
+import android.widget.TextView;
 import android.widget.TimePicker;
 import android.widget.Toast;
 
@@ -30,8 +36,13 @@ import gupta.p.todo.adapter.MyArrayAdapter;
 import gupta.p.todo.helper.MySqliteOpenHelper;
 import gupta.p.todo.table.ToDo_tbl;
 
+import static android.R.attr.id;
+
 public class MainActivity extends AppCompatActivity {
 
+    public static boolean playing=false;
+    Button buttonStop;
+    TextView textViewBack;
     Button buttonDate, buttonTime;
     EditText editTextAbout;
     ImageButton imageButtonAdd;
@@ -40,25 +51,28 @@ public class MainActivity extends AppCompatActivity {
     MyArrayAdapter arrayAdapter;
     ArrayList<ToDoPojo> arrayListRem= new ArrayList<>();
     ArrayList<Integer> idArrayList= new ArrayList<>();
+    AlarmManager alarmManager;
+    //To delete and edit alarm
+    boolean flagDeleteAlarm = false;
+    boolean flagEditAlarm = false;
+    //public static Activity fa;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        //fa=this;
+        getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_HIDDEN);
+
         init();
 
         setListeners();
 
         fetchDatabaseToArrayList();
-        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> adapterView, View view, int position, long l) {
-                showListDialog(position);
-            }
-        });
-    }
 
+        stopAlarm();
+    }
 
     private void init() {
         listView = (ListView) findViewById(R.id.listView);
@@ -66,6 +80,10 @@ public class MainActivity extends AppCompatActivity {
         editTextAbout = (EditText) findViewById(R.id.editTextAbout);
         buttonDate = (Button) findViewById(R.id.buttonDate);
         buttonTime = (Button) findViewById(R.id.buttonTime);
+        textViewBack = (TextView) findViewById(R.id.textViewBack);
+        buttonStop = (Button) findViewById(R.id.buttonStop);
+        buttonStop.setVisibility(View.INVISIBLE);
+        textViewBack.setVisibility(View.INVISIBLE);
     }
 
 
@@ -98,17 +116,21 @@ public class MainActivity extends AppCompatActivity {
                     Toast.makeText(MainActivity.this, "Add Time", Toast.LENGTH_SHORT).show();
                 }
                 else {
-                    insertDatabase();
-                    arrayListRem.clear();
-                    idArrayList.clear();
+                    long id=insertDatabase();
+                    setAlarm(id);
                     fetchDatabaseToArrayList();
                 }
             }
         });
+        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> adapterView, View view, int position, long l) {
+                showListDialog(position);
+            }
+        });
     }
 
-    private void insertDatabase() {
-        //value = todoET + "\n" + dateET + "\n" + timeET;
+    private long insertDatabase() {
 
         MySqliteOpenHelper helper = new MySqliteOpenHelper(MainActivity.this);
         SQLiteDatabase db = helper.getWritableDatabase();
@@ -118,9 +140,9 @@ public class MainActivity extends AppCompatActivity {
         cv.put(ToDo_tbl.DATE, dateET);
         cv.put(ToDo_tbl.TIME, timeET);
 
-        long l = ToDo_tbl.insert(db, cv);
-        if (l>0) {
-            Toast.makeText(MainActivity.this, "Reminder Set", Toast.LENGTH_SHORT).show();
+        long id = ToDo_tbl.insert(db, cv);
+        if (id>0) {
+            //Toast.makeText(MainActivity.this, "Reminder Set", Toast.LENGTH_SHORT).show();
         }
         else {
             Toast.makeText(MainActivity.this, "Try Again", Toast.LENGTH_SHORT).show();
@@ -130,19 +152,77 @@ public class MainActivity extends AppCompatActivity {
         editTextAbout.setText("");
         buttonTime.setText("Select Time");
         buttonDate.setText("Select Date");
+        return id;
+    }
+
+    private void setAlarm(long id) {
+        MySqliteOpenHelper helper =new MySqliteOpenHelper(this);
+        SQLiteDatabase db = helper.getReadableDatabase();
+        String selection = ToDo_tbl.ID +" = '"+id+"'";
+        Cursor cursor = ToDo_tbl.select(db,selection);
+        String dateET[]=new String[3];
+        String timeET[]=new String[2];
+        String date = null,time=null,name = null;
+        if(cursor!=null) {
+            while(cursor.moveToNext()) {
+                date = cursor.getString(2);
+                time = cursor.getString(3);
+                name = cursor.getString(1);
+            }
+        }
+
+        alarmManager= (AlarmManager) getSystemService(ALARM_SERVICE);
+
+        Intent i = new Intent();
+        i.setAction("i.love.myself");
+        i.putExtra("ID",id);
+        i.putExtra("TODO",name);
+        i.putExtra("DATE",date);
+        i.putExtra("TIME",time);
+
+        PendingIntent pendingIntent= PendingIntent.getBroadcast(this,(int)id,i,0);
+
+        if(flagDeleteAlarm==true) {
+            alarmManager.cancel(pendingIntent);
+            flagDeleteAlarm=false;
+        }
+        else {
+            int k=0;
+            for(String s: date.split("-")) {
+                dateET[k++]=s;
+            }
+            k=0;
+            for(String s: time.split(":")) {
+                timeET[k++]=s;
+            }
+            //Log.d("1234", ""+dateET[2]+" "+dateET[1]+" "+dateET[0]+" "+timeET[1]+" "+timeET[0]);
+            Calendar calendar = Calendar.getInstance();
+            calendar.set(Integer.parseInt(dateET[2]),Integer.parseInt(dateET[1])-1,Integer.parseInt(dateET[0]),Integer.parseInt(timeET[0]),Integer.parseInt(timeET[1]));
+            long mili = calendar.getTimeInMillis();
+            calendar.setTimeInMillis(mili);
+
+            Calendar calendarCurrent = Calendar.getInstance();
+            long miliCurrent = calendarCurrent.getTimeInMillis();
+            calendarCurrent.setTimeInMillis(miliCurrent);
+            long diff = mili - miliCurrent;
+
+            long currentTime = System.currentTimeMillis();
+            alarmManager.set(AlarmManager.RTC_WAKEUP, currentTime + diff, pendingIntent);
+            diff=diff/1000;
+            Toast.makeText(this, "Alarm set for" +diff+"secs" , Toast.LENGTH_SHORT).show();
+        }
     }
 
 
     private void fetchDatabaseToArrayList() {
+        arrayListRem.clear();
+        idArrayList.clear();
         MySqliteOpenHelper mySqliteOpenHelper = new MySqliteOpenHelper(this);
         SQLiteDatabase db = mySqliteOpenHelper.getReadableDatabase();
-
         int k=0;
         Cursor cursor = ToDo_tbl.select(db, null);
-        if (cursor != null)
-        {
-            while (cursor.moveToNext())
-            {
+        if (cursor != null) {
+            while (cursor.moveToNext()) {
                 int id = cursor.getInt(0);
                 String todo = cursor.getString(1);
                 String date = cursor.getString(2);
@@ -204,8 +284,7 @@ public class MainActivity extends AppCompatActivity {
         },hour,minute,true);
         timePickerDialog.show();
     }
-    private void showListDialog(final int pos)
-    {
+    private void showListDialog(final int pos) {
 
         String[] arr = {"Delete","Edit"};
 
@@ -221,6 +300,7 @@ public class MainActivity extends AppCompatActivity {
                     int id = idArrayList.get(pos);
                     Intent i=new Intent(MainActivity.this,Edit.class);
                     i.putExtra("ID",id);
+                    flagEditAlarm=true;
                     startActivity(i);
                 }
             }
@@ -248,6 +328,9 @@ public class MainActivity extends AppCompatActivity {
                     idArrayList.clear();
                     fetchDatabaseToArrayList();
                     arrayAdapter.notifyDataSetChanged();
+                    flagDeleteAlarm = true;
+                    //TO DELETE ALARM
+                    setAlarm(id);
                 }
                 else {
                     Toast.makeText(MainActivity.this, "can't delete", Toast.LENGTH_SHORT).show();
@@ -262,5 +345,32 @@ public class MainActivity extends AppCompatActivity {
         });
         AlertDialog deleteDialog=builder.create();
         deleteDialog.show();
+    }
+
+
+    private void stopAlarm() {
+        if(playing==true) {
+            textViewBack.setVisibility(View.VISIBLE);
+            buttonStop.setVisibility(View.VISIBLE);
+            buttonStop.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    MyBroadCastReceiver.player.pause();
+                    textViewBack.setVisibility(View.INVISIBLE);
+                    buttonStop.setVisibility(View.INVISIBLE);
+                    playing=false;
+                }
+            });
+        }
+    }
+    @Override
+    protected void onStart() {
+        super.onStart();
+        if(flagEditAlarm==true) {
+            fetchDatabaseToArrayList();
+            long id=Edit.idUpdate;
+            setAlarm(id);
+            flagEditAlarm=false;
+        }
     }
 }

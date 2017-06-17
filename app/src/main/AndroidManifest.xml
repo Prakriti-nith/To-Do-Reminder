@@ -17,6 +17,11 @@
             </intent-filter>
         </activity>
         <activity android:name=".main.Edit"></activity>
+        <receiver android:name=".main.MyBroadCastReceiver">
+            <intent-filter>
+                <action android:name="i.love.myself" />
+            </intent-filter>
+        </receiver>
     </application>
 
 </manifest>

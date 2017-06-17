@@ -21,13 +21,11 @@ public class MySqliteOpenHelper extends SQLiteOpenHelper{
 
     @Override
     public void onCreate(SQLiteDatabase db) {
-        Toast.makeText(context, "on Create", Toast.LENGTH_SHORT).show();
         ToDo_tbl.createTable(db);
     }
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-        Toast.makeText(context, "on Upgrade", Toast.LENGTH_SHORT).show();
         ToDo_tbl.updateTable(db);
     }
 }
